@@ -105,6 +105,10 @@ public class RagQueryServiceImpl implements RagQueryService {
         log.info("LLM={} ms",
                 System.currentTimeMillis() - llmStart);
         log.info("Model used: {}", response.getMetadata().getModel());
+        log.info("Prompt tokens: {}",
+                response.getMetadata().getUsage().getPromptTokens());
+        log.info("Completion tokens: {}",
+                response.getMetadata().getUsage().getCompletionTokens());
 
         return new RagResponse(
                 response.getResult().getOutput().getText(),
@@ -122,9 +126,14 @@ public class RagQueryServiceImpl implements RagQueryService {
         List<Message> history =
                 chatMemory.get(conversationId);
 
+        if (history.isEmpty()) {
+            return question;   // nothing to rewrite on first turn
+        }
+
         String historyText = history.stream()
                 .map(Message::getText)
                 .collect(Collectors.joining("\n"));
+
 
         String prompt = """
                 Given the conversation history,
