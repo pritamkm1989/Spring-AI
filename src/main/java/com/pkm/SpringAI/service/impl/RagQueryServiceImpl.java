@@ -8,6 +8,7 @@ import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.messages.Message;
+import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
@@ -25,6 +26,9 @@ public class RagQueryServiceImpl implements RagQueryService {
     private  VectorStore vectorStore;
 
     private final ChatClient chatClient;
+
+    @Autowired
+    private  ChatClient reWriteChatClient;
 
     @Autowired
     private ChatMemory chatMemory;
@@ -76,24 +80,34 @@ public class RagQueryServiceImpl implements RagQueryService {
         List<Message> history = chatMemory.get(conversationId);
         log.info("RagQueryServiceImpl query history: {}", history);
 
-       String contextualizedQuery = rewriteQueryWithHistory(userQuestion, conversationId);
+        long start = System.currentTimeMillis();
+        String contextualizedQuery = rewriteQueryWithHistory(userQuestion, conversationId);
+        log.info("Rewrite={} ms",
+                System.currentTimeMillis() - start);
         log.info("RagQueryServiceImpl query userQuestion: {}", contextualizedQuery);
 
-
+        long retrievalStart = System.currentTimeMillis();
         var docs = vectorStore.similaritySearch(SearchRequest.builder()
                 .query(userQuestion)
                 .topK(5)
                 .build());
 
-        String answer = chatClient.prompt()
+        log.info("Retrieval={} ms",
+                System.currentTimeMillis() - retrievalStart);
+
+        long llmStart = System.currentTimeMillis();
+        ChatResponse response =  chatClient.prompt()
                 .user(contextualizedQuery)
                 .advisors(advisor -> advisor
                         .param(ChatMemory.CONVERSATION_ID, conversationId))
                 .call()
-                .content();
+                .chatResponse();
+        log.info("LLM={} ms",
+                System.currentTimeMillis() - llmStart);
+        log.info("Model used: {}", response.getMetadata().getModel());
 
         return new RagResponse(
-                answer,
+                response.getResult().getOutput().getText(),
                 docs.stream()
                         .map(d -> d.getMetadata().get("source"))
                         .distinct()
@@ -127,7 +141,7 @@ public class RagQueryServiceImpl implements RagQueryService {
                 """
                 .formatted(historyText, question);
 
-        return chatClient.prompt()
+        return reWriteChatClient.prompt()
                 .user(prompt)
                 .call()
                 .content();
