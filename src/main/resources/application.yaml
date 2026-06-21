@@ -1,0 +1,52 @@
+spring:
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+  application:
+    name: SpringAI
+
+  # docker run -d --name pgvector   -e POSTGRES_USER=postgres  -e POSTGRES_PASSWORD=postgres  -e POSTGRES_DB=springai  -p 5432:5432 pgvector/pgvector:pg17
+  # psql -U postgres -d springai
+  #\dx
+  # CREATE EXTENSION IF NOT EXISTS vector;
+  # \dt List of relations
+  datasource:
+    url: jdbc:postgresql://localhost:5422/springai
+    username: postgres
+    password: postgres
+
+  ai:
+    ollama:
+      base-url: http://localhost:11434
+      chat:
+        model: gemma2:2b
+      embedding:
+        model: nomic-embed-text
+    vectorstore:
+      pgvector:
+        initialize-schema: true
+        remove-existing-vector-store-table: true
+        dimensions: 768
+        distance-type: COSINE_DISTANCE
+
+
+
+logging:
+  level:
+    # ===== OLLAMA =====
+    org.springframework.ai.ollama: DEBUG
+    org.springframework.ai.ollama.api: DEBUG
+    org.springframework.ai.ollama.chat: DEBUG
+
+    # ===== VECTOR STORE =====
+    org.springframework.ai.vectorstore.pgvector: DEBUG
+    org.springframework.ai.vectorstore: DEBUG
+
+    # ===== RAW HTTP TO OLLAMA =====
+    org.springframework.web.reactive.function.client: DEBUG
+    reactor.netty.http.client: INFO
+
+    # ===== DATABASE SQL WITH VALUES =====
+    org.springframework.jdbc.core.JdbcTemplate: DEBUG
+    org.springframework.jdbc.core.StatementCreatorUtils: TRACE
