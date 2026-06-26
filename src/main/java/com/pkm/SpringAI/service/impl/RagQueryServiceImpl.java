@@ -13,6 +13,7 @@ import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -28,7 +29,8 @@ public class RagQueryServiceImpl implements RagQueryService {
     private final ChatClient chatClient;
 
     @Autowired
-    private  ChatClient reWriteChatClient;
+    @Qualifier("phi3ChatChatClient")
+    private  ChatClient phi3ChatChatClient;
 
     @Autowired
     private ChatMemory chatMemory;
@@ -95,20 +97,13 @@ public class RagQueryServiceImpl implements RagQueryService {
         log.info("Retrieval={} ms",
                 System.currentTimeMillis() - retrievalStart);
 
-        long llmStart = System.currentTimeMillis();
         ChatResponse response =  chatClient.prompt()
                 .user(contextualizedQuery)
                 .advisors(advisor -> advisor
                         .param(ChatMemory.CONVERSATION_ID, conversationId))
                 .call()
                 .chatResponse();
-        log.info("LLM={} ms",
-                System.currentTimeMillis() - llmStart);
-        log.info("Model used: {}", response.getMetadata().getModel());
-        log.info("Prompt tokens: {}",
-                response.getMetadata().getUsage().getPromptTokens());
-        log.info("Completion tokens: {}",
-                response.getMetadata().getUsage().getCompletionTokens());
+
 
         return new RagResponse(
                 response.getResult().getOutput().getText(),
@@ -150,7 +145,7 @@ public class RagQueryServiceImpl implements RagQueryService {
                 """
                 .formatted(historyText, question);
 
-        return reWriteChatClient.prompt()
+        return phi3ChatChatClient.prompt()
                 .user(prompt)
                 .call()
                 .content();

@@ -1,6 +1,5 @@
 package com.pkm.SpringAI.config;
 
-import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.ai.chat.memory.InMemoryChatMemoryRepository;
@@ -49,10 +48,7 @@ public class RagConfig {
         return new ObjectMapper();
     }
 
-    @Bean
-    public ChatClient chatClient(ChatClient.Builder builder) {
-        return builder.build();
-    }
+
 
 
 }

@@ -19,35 +19,8 @@ import java.util.List;
 
 @Configuration
 @Slf4j
-public class OllamaInterceptor {
+public class OllamaEmbeddingInterceptor {
 
-
-    // ===== CHAT LOGGING =====
-    @Bean
-    @Primary
-    public ChatModel loggingChatModel(@Qualifier("ollamaChatModel") ChatModel delegate) {
-        return new ChatModel() {
-            @Override
-            public ChatResponse call(Prompt prompt) {
-                log.info(">>> OLLAMA CHAT REQUEST");
-                prompt.getInstructions().forEach(msg ->
-                        log.info("  [{}] : {}", msg.getMessageType(), msg.getText())
-                );
-
-                long start = System.currentTimeMillis();
-                ChatResponse response = delegate.call(prompt);
-                long ms = System.currentTimeMillis() - start;
-
-                log.info("<<< OLLAMA CHAT RESPONSE ({}ms)", ms);
-                response.getResults().forEach(r ->
-                        log.info("  Response: {}", r.getOutput().getText())
-                );
-                return response;
-            }
-
-
-        };
-    }
 
     // ===== EMBEDDING LOGGING =====
     @Bean
