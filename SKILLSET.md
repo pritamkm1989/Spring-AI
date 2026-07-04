@@ -1,401 +1,519 @@
-# Java Spring Boot Skill Set Assessment
+# Java Spring Boot Industry Standard Skill Set
 
 ## Overview
-This document defines the comprehensive skill set for evaluating Java Spring Boot code generation and code review capabilities. It establishes benchmarks for both AI-generated code quality and the ability to review, critique, and improve Spring Boot applications.
+This is an **industry-standard** skill set aligned with professional Spring Boot development practices. It covers the most commonly required capabilities in enterprise environments and is designed to be applicable across diverse project types (REST APIs, microservices, event-driven systems, etc.).
 
 ---
 
-## 1. Core Spring Boot Fundamentals
+## 1. REST API Development & Web Controllers
 
-### 1.1 Dependency Injection & Beans
-**Code Generation Criteria:**
-- [ ] Correctly defines Spring beans using `@Bean`, `@Component`, `@Service`, `@Repository`, `@Controller` annotations
-- [ ] Implements proper constructor injection over field injection
-- [ ] Handles circular dependencies appropriately
-- [ ] Uses appropriate bean scopes (Singleton, Prototype, Request, Session)
+### 1.1 RESTful Endpoint Design
+**Generation Criteria:**
+- [ ] Uses appropriate HTTP verbs (GET, POST, PUT, DELETE, PATCH)
+- [ ] Implements proper status codes (200, 201, 204, 400, 401, 403, 404, 409, 500)
+- [ ] Designs RESTful URLs following conventions (`/api/v1/resources/{id}`)
+- [ ] Implements request validation using `@Valid`, `@Validated`
+- [ ] Returns consistent response DTOs with metadata
 
-**Code Review Checklist:**
-- Verify injection pattern consistency across codebase
-- Identify unnecessary bean creation or lifecycle issues
-- Ensure no hardcoded dependencies that should be injected
-- Check for proper testing setup with `@SpringBootTest` and `@MockBean`
+**Review Checklist:**
+- ✓ HTTP methods match CRUD operations correctly
+- ✓ All endpoints validate input properly
+- ✓ Status codes are semantically correct
+- ✓ API versioning strategy is consistent
+- ✓ Pagination implemented for list endpoints
 
-### 1.2 Application Configuration
-**Code Generation Criteria:**
-- [ ] Creates proper `application.properties` or `application.yml` files
-- [ ] Implements `@Configuration` classes with `@EnableXxx` annotations appropriately
-- [ ] Uses Spring Profiles for environment-specific configuration
-- [ ] Implements `ConfigurationProperties` for type-safe configuration binding
-
-**Code Review Checklist:**
-- Verify configuration externalization (no hardcoded values)
-- Check for proper use of `@ConditionalOnProperty`, `@ConditionalOnClass`
-- Ensure sensitive data not exposed in config files
-- Validate Spring profiles are properly configured
-
----
-
-## 2. REST API Development
-
-### 2.1 Controller Implementation
-**Code Generation Criteria:**
-- [ ] Creates controllers with proper `@RestController` or `@Controller` annotations
-- [ ] Implements correct HTTP methods (`@GetMapping`, `@PostMapping`, `@PutMapping`, `@DeleteMapping`, `@PatchMapping`)
-- [ ] Uses appropriate request/response mapping (`@RequestBody`, `@PathVariable`, `@RequestParam`, `@RequestHeader`)
-- [ ] Implements proper request validation with `@Valid`, `@Validated`
-- [ ] Returns appropriate HTTP status codes
-
-**Code Review Checklist:**
-- Verify RESTful principles are followed (HTTP verbs used correctly)
-- Check for input validation on all endpoints
-- Ensure proper error handling and exception mapping
-- Validate API versioning strategy if present
-
-### 2.2 Exception Handling
-**Code Generation Criteria:**
-- [ ] Implements `@ControllerAdvice` or `@RestControllerAdvice` for global exception handling
-- [ ] Creates custom exception classes extending `RuntimeException`
+### 1.2 Exception Handling & Error Responses
+**Generation Criteria:**
+- [ ] Implements `@RestControllerAdvice` for global exception handling
+- [ ] Creates custom exception classes for business errors
 - [ ] Maps exceptions to appropriate HTTP status codes
-- [ ] Provides meaningful error response structures (DTOs)
+- [ ] Returns standardized error response format (with error code, message, timestamp)
+- [ ] Logs exceptions appropriately without exposing sensitive data
 
-**Code Review Checklist:**
-- Verify consistent error response format across API
-- Check for proper logging of exceptions
-- Ensure no sensitive information leaked in error messages
-- Validate proper use of `@ExceptionHandler`
+**Review Checklist:**
+- ✓ All exceptions caught and mapped to HTTP responses
+- ✓ Error response includes error code, message, and timestamp
+- ✓ No stack traces exposed to clients
+- ✓ Consistent error response structure across all endpoints
+- ✓ Proper logging of errors for debugging
 
 ---
 
-## 3. Data Persistence & ORM
+## 2. Dependency Injection & Component Lifecycle
 
-### 3.1 JPA/Hibernate Entities
-**Code Generation Criteria:**
-- [ ] Creates entities with proper `@Entity`, `@Table` annotations
-- [ ] Implements appropriate ID generation strategies (`@Id`, `@GeneratedValue`)
-- [ ] Defines relationships correctly (`@OneToOne`, `@OneToMany`, `@ManyToMany`)
-- [ ] Uses proper cascading types (CascadeType.PERSIST, MERGE, REMOVE, etc.)
-- [ ] Implements lombok annotations appropriately (`@Data`, `@Getter`, `@Setter`, `@NoArgsConstructor`, `@AllArgsConstructor`, `@Builder`)
+### 2.1 Bean Definition & Injection Patterns
+**Generation Criteria:**
+- [ ] Uses constructor injection (preferred) over field injection
+- [ ] Defines beans with appropriate annotations (`@Component`, `@Service`, `@Repository`)
+- [ ] Implements proper bean scopes (Singleton, Prototype)
+- [ ] Avoids circular dependencies or resolves them properly
+- [ ] Uses `@Qualifier` or `@Primary` for multiple bean implementations
 
-**Code Review Checklist:**
-- Verify N+1 query problem is avoided (use fetch types correctly)
-- Check for proper use of `@Transactional` at service layer
-- Ensure lazy loading issues are understood and handled
-- Validate proper use of `equals()` and `hashCode()` for entities
-- Check for proper indexed fields in high-query tables
+**Review Checklist:**
+- ✓ Constructor injection used consistently (not @Autowired on fields)
+- ✓ Bean annotations applied correctly based on responsibility
+- ✓ No unnecessary bean creation
+- ✓ Beans properly initialized and destroyed
+- ✓ Dependencies clearly visible in constructor
 
-### 3.2 Repository Layer
-**Code Generation Criteria:**
-- [ ] Creates repository interfaces extending `JpaRepository`, `CrudRepository`
-- [ ] Defines custom query methods with proper naming conventions
-- [ ] Uses `@Query` annotations with JPQL/HQL or native SQL when needed
-- [ ] Implements pagination and sorting properly (`Pageable`, `Sort`)
-- [ ] Uses appropriate projection patterns for read-only queries
+### 2.2 Configuration Management
+**Generation Criteria:**
+- [ ] Externalizes configuration using `application.yml` or `application.properties`
+- [ ] Implements environment-specific profiles (dev, test, prod)
+- [ ] Uses `@ConfigurationProperties` for type-safe configuration
+- [ ] Avoids hardcoded values in code
+- [ ] Manages secrets via environment variables or secure vault
 
-**Code Review Checklist:**
-- Verify queries are optimized and indexed appropriately
-- Check for proper transaction boundaries
-- Ensure database-specific queries are documented
-- Validate custom repository implementations if present
+**Review Checklist:**
+- ✓ All configuration externalized from code
+- ✓ Sensitive data not in version control
+- ✓ Spring profiles properly configured
+- ✓ Configuration validates on startup
+- ✓ Default values provided with override capability
+
+---
+
+## 3. Data Persistence & Transactions
+
+### 3.1 Repository Pattern Implementation
+**Generation Criteria:**
+- [ ] Extends `JpaRepository` or `CrudRepository` for data access
+- [ ] Implements custom query methods with proper naming conventions
+- [ ] Uses `@Query` annotation for complex queries (JPQL, native SQL)
+- [ ] Implements pagination with `Pageable` and `Sort`
+- [ ] Uses projections for read-only queries to optimize performance
+
+**Review Checklist:**
+- ✓ Repository methods are simple and focused
+- ✓ Custom queries documented (especially native SQL)
+- ✓ Pagination used for large datasets
+- ✓ No business logic in repository layer
+- ✓ Queries are optimized (no SELECT *)
+
+### 3.2 Entity Mapping & ORM
+**Generation Criteria:**
+- [ ] Entities properly annotated with `@Entity`, `@Table`
+- [ ] Uses appropriate ID generation strategy (`@GeneratedValue`)
+- [ ] Relationships properly defined (`@OneToOne`, `@OneToMany`, `@ManyToMany`)
+- [ ] Lazy/Eager loading configured appropriately
+- [ ] Uses Lombok for boilerplate reduction (`@Data`, `@Builder`)
+
+**Review Checklist:**
+- ✓ N+1 query problem avoided (proper fetch types)
+- ✓ Cascade types appropriate for the relationship
+- ✓ Entities don't expose sensitive data
+- ✓ Bidirectional relationships properly managed
+- ✓ Entity equals/hashCode appropriate
+
+### 3.3 Transaction Management
+**Generation Criteria:**
+- [ ] Uses `@Transactional` at service layer (not controller)
+- [ ] Specifies `readOnly=true` for query-only methods
+- [ ] Proper propagation behavior configured where needed
+- [ ] Handles transaction rollback scenarios
+- [ ] Timeout configured for long-running transactions
+
+**Review Checklist:**
+- ✓ Transactions at appropriate layer (service, not controller/repository)
+- ✓ Read-only transactions marked for optimization
+- ✓ Rollback strategy understood and implemented
+- ✓ No nested transactions creating issues
+- ✓ Deadlock potential minimized
 
 ---
 
 ## 4. Service Layer & Business Logic
 
-### 4.1 Service Implementation
-**Code Generation Criteria:**
-- [ ] Creates service classes with `@Service` annotation
-- [ ] Implements `@Transactional` at appropriate layer (read-only vs write)
-- [ ] Uses proper exception handling
-- [ ] Separates business logic from persistence logic
-- [ ] Implements DTOs for data transformation (MapStruct, ModelMapper, or manual mapping)
+### 4.1 Service Design
+**Generation Criteria:**
+- [ ] Business logic encapsulated in `@Service` classes
+- [ ] Services use repositories for data access (not entities directly)
+- [ ] Methods follow single responsibility principle
+- [ ] Complex logic extracted into separate methods
+- [ ] DTOs used for request/response (not entities)
 
-**Code Review Checklist:**
-- Verify transaction boundaries are correct
-- Check for proper service method naming conventions
-- Ensure no direct entity exposure to controllers (DTO pattern)
-- Validate business logic testability
+**Review Checklist:**
+- ✓ Services only contain business logic
+- ✓ No SQL/query logic in services
+- ✓ No direct entity exposure to controllers
+- ✓ Methods are testable and mockable
+- ✓ Consistent naming conventions
+
+### 4.2 Data Transfer Objects (DTOs)
+**Generation Criteria:**
+- [ ] Request DTOs for incoming data with validation annotations
+- [ ] Response DTOs for outgoing data
+- [ ] Entities never exposed directly to API clients
+- [ ] DTO mapping logic separated (manual, MapStruct, or ModelMapper)
+- [ ] DTOs include only necessary fields
+
+**Review Checklist:**
+- ✓ DTOs have proper validation annotations
+- ✓ Mapping logic is reusable
+- ✓ No sensitive data in response DTOs
+- ✓ DTOs are immutable where appropriate
+- ✓ Consistent DTO naming convention
 
 ---
 
-## 5. Testing
+## 5. Testing & Code Quality
 
 ### 5.1 Unit Testing
-**Code Generation Criteria:**
-- [ ] Uses JUnit 5 or JUnit 4 with proper test structure
-- [ ] Implements Mockito for mocking dependencies
-- [ ] Follows Arrange-Act-Assert (AAA) pattern
-- [ ] Tests both happy path and error scenarios
-- [ ] Achieves reasonable code coverage (>70%)
+**Generation Criteria:**
+- [ ] Uses JUnit 5 with proper test structure
+- [ ] Mocks external dependencies with Mockito
+- [ ] Follows Arrange-Act-Assert pattern
+- [ ] Tests both success and failure scenarios
+- [ ] Achieves minimum 70% code coverage for critical paths
 
-**Code Review Checklist:**
-- Verify test independence (no test order dependencies)
-- Check for proper test data setup (builders or fixtures)
-- Ensure mocks are used appropriately (not over-mocking)
-- Validate meaningful assertions (not just existence checks)
+**Review Checklist:**
+- ✓ Tests are independent (no shared state)
+- ✓ Test data setup is clear and maintainable
+- ✓ Meaningful assertions (not just null checks)
+- ✓ Test method names clearly describe what's tested
+- ✓ No hardcoded values in tests
 
 ### 5.2 Integration Testing
-**Code Generation Criteria:**
-- [ ] Uses `@SpringBootTest` for full context tests
-- [ ] Implements `@DataJpaTest` for repository layer tests
-- [ ] Uses `@WebMvcTest` or `@WebFluxTest` for controller tests
-- [ ] Implements proper test database setup (H2, TestContainers)
-- [ ] Implements `@Transactional` with `ROLLBACK` for test isolation
+**Generation Criteria:**
+- [ ] Uses `@SpringBootTest` for full-context tests
+- [ ] Tests real database interactions (H2, TestContainers)
+- [ ] Uses `@Transactional` with rollback for test isolation
+- [ ] Mocks external services (HTTP, messaging)
+- [ ] Separate integration tests from unit tests
 
-**Code Review Checklist:**
-- Verify test isolation (rollback after each test)
-- Check for proper test fixture usage
-- Ensure integration tests don't duplicate unit tests
-- Validate external service mocking (WireMock, MockServer)
+**Review Checklist:**
+- ✓ Each test is independent (can run in any order)
+- ✓ Test data cleaned up after each test
+- ✓ Database transactions rolled back
+- ✓ External API calls mocked appropriately
+- ✓ Integration tests don't duplicate unit tests
 
 ---
 
-## 6. Security
+## 6. Security Best Practices
 
 ### 6.1 Authentication & Authorization
-**Code Generation Criteria:**
-- [ ] Configures Spring Security properly with `@EnableWebSecurity`
-- [ ] Implements authentication using JWT, OAuth2, or session-based approach
-- [ ] Defines role-based access control with `@PreAuthorize`, `@Secured`
-- [ ] Implements proper password encoding (BCrypt, Argon2)
-- [ ] Handles CORS configuration appropriately
+**Generation Criteria:**
+- [ ] Uses Spring Security framework appropriately
+- [ ] Implements token-based auth (JWT) or session-based auth
+- [ ] Role-based access control with `@PreAuthorize`
+- [ ] Passwords hashed with BCrypt or Argon2
+- [ ] CORS configured for frontend integration
 
-**Code Review Checklist:**
-- Verify authentication mechanism is secure
-- Check for proper authorization checks on all endpoints
-- Ensure passwords are properly hashed
-- Validate CSRF protection is enabled for form-based apps
-- Check for SQL injection prevention
+**Review Checklist:**
+- ✓ All sensitive endpoints require authentication
+- ✓ Authorization checks prevent unauthorized access
+- ✓ Passwords never logged or exposed
+- ✓ Tokens have appropriate expiration
+- ✓ CSRF protection enabled where applicable
 
-### 6.2 Data Security
-**Code Generation Criteria:**
-- [ ] No hardcoded secrets or credentials in code
-- [ ] Uses environment variables or secure vault for secrets
-- [ ] Implements proper input validation and sanitization
-- [ ] Protects sensitive data in logs (masking)
+### 6.2 Input Validation & Sanitization
+**Generation Criteria:**
+- [ ] All user input validated at controller level
+- [ ] Uses `@Valid` with JSR-303/JSR-380 annotations
+- [ ] Prevents SQL injection with parameterized queries
+- [ ] No eval-like operations on user input
+- [ ] File upload size and type validation
 
-**Code Review Checklist:**
-- Verify no sensitive data in version control
-- Check for proper parameterized queries
-- Ensure encryption is used for sensitive data in transit/rest
-- Validate rate limiting implementation
+**Review Checklist:**
+- ✓ Input validation catches invalid data early
+- ✓ Error messages don't reveal system details
+- ✓ All database queries parameterized
+- ✓ No string concatenation in SQL
+- ✓ File uploads validated and scanned
 
----
+### 6.3 Sensitive Data Protection
+**Generation Criteria:**
+- [ ] No hardcoded secrets or credentials
+- [ ] Uses environment variables for sensitive config
+- [ ] Passwords and tokens never logged
+- [ ] PII masked in logs where logged
+- [ ] HTTPS enforced in production
 
-## 7. Performance & Optimization
-
-### 7.1 Caching Strategy
-**Code Generation Criteria:**
-- [ ] Uses `@Cacheable`, `@CachePut`, `@CacheEvict` annotations appropriately
-- [ ] Implements proper cache key strategies
-- [ ] Configures cache expiration policies
-- [ ] Chooses appropriate cache backend (Redis, Ehcache, etc.)
-
-**Code Review Checklist:**
-- Verify cache invalidation strategy is sound
-- Check for cache stampede prevention
-- Ensure cache keys are unique and appropriate
-- Validate cache hit ratio metrics
-
-### 7.2 Query Performance
-**Code Generation Criteria:**
-- [ ] Uses appropriate fetch strategies (EAGER vs LAZY)
-- [ ] Implements query optimization (`@EntityGraph`, projection)
-- [ ] Uses pagination for large result sets
-- [ ] Implements proper database indexing strategy
-
-**Code Review Checklist:**
-- Verify N+1 query problems are avoided
-- Check for query execution plans
-- Ensure pagination is implemented for list endpoints
-- Validate slow query logging is enabled
+**Review Checklist:**
+- ✓ Secrets managed via environment variables or vaults
+- ✓ Sensitive data not in version control
+- ✓ Logs don't contain passwords, tokens, PII
+- ✓ API keys rotated regularly
+- ✓ HTTPS enforced for all endpoints
 
 ---
 
-## 8. Logging & Monitoring
+## 7. Logging & Monitoring
 
-### 8.1 Logging Implementation
-**Code Generation Criteria:**
-- [ ] Uses SLF4J with Logback or Log4j2
-- [ ] Implements proper log levels (DEBUG, INFO, WARN, ERROR)
-- [ ] Logs relevant business events and errors
-- [ ] Avoids sensitive data logging
-- [ ] Uses structured logging (JSON format when appropriate)
+### 7.1 Logging Implementation
+**Generation Criteria:**
+- [ ] Uses SLF4J with Logback (or Log4j2)
+- [ ] Appropriate log levels (DEBUG, INFO, WARN, ERROR)
+- [ ] Logs business-critical events
+- [ ] No sensitive data in logs
+- [ ] Structured logging with key-value pairs
 
-**Code Review Checklist:**
-- Verify log levels are appropriate
-- Check for consistent logging patterns
-- Ensure no sensitive data in logs
-- Validate centralized logging setup (ELK, Splunk, etc.)
+**Review Checklist:**
+- ✓ Log levels used correctly
+- ✓ No excessive logging (INFO not DEBUG in production)
+- ✓ Error logs include context for debugging
+- ✓ Consistent log format across application
+- ✓ Correlation IDs for request tracing
 
-### 8.2 Metrics & Monitoring
-**Code Generation Criteria:**
-- [ ] Uses Spring Boot Actuator endpoints
-- [ ] Implements custom metrics with Micrometer
-- [ ] Configures health checks appropriately
-- [ ] Implements distributed tracing (Spring Cloud Sleuth + Zipkin)
+### 7.2 Health Checks & Metrics
+**Generation Criteria:**
+- [ ] Spring Boot Actuator endpoints exposed appropriately
+- [ ] Custom health checks for critical dependencies
+- [ ] Metrics exposed for monitoring (Micrometer)
+- [ ] Readiness and liveness probes configured
+- [ ] Graceful shutdown implemented
 
-**Code Review Checklist:**
-- Verify metrics are meaningful and actionable
-- Check for proper monitoring alerts
-- Ensure health checks cover critical dependencies
-- Validate proper metric naming conventions
+**Review Checklist:**
+- ✓ Health check covers database, cache, external APIs
+- ✓ Metrics meaningful and actionable
+- ✓ No sensitive information in actuator endpoints
+- ✓ Monitoring alerts configured
+- ✓ Graceful shutdown prevents data loss
+
+---
+
+## 8. Performance & Scalability
+
+### 8.1 Database Optimization
+**Generation Criteria:**
+- [ ] Appropriate indexing on frequently queried columns
+- [ ] N+1 query problem avoided (use fetch strategies)
+- [ ] Query optimization with `@EntityGraph` or projections
+- [ ] Connection pooling configured (HikariCP)
+- [ ] Slow query logging enabled
+
+**Review Checklist:**
+- ✓ No SELECT * queries (specify needed columns)
+- ✓ Large result sets paginated
+- ✓ Indexes on foreign keys and WHERE clauses
+- ✓ Query execution plans reviewed
+- ✓ Connection pool tuned for workload
+
+### 8.2 Caching Strategy
+**Generation Criteria:**
+- [ ] Caching implemented for frequently accessed data
+- [ ] Appropriate cache backend (Redis, Ehcache)
+- [ ] Cache invalidation strategy clear
+- [ ] Cache key strategy prevents collisions
+- [ ] Cache-aside or write-through pattern used
+
+**Review Checklist:**
+- ✓ Cache TTL appropriate for data freshness
+- ✓ Cache hit rate monitored
+- ✓ Cache stampede problem prevented
+- ✓ Distributed cache consistency handled
+- ✓ Fallback when cache unavailable
+
+### 8.3 API Performance
+**Generation Criteria:**
+- [ ] Pagination implemented for list endpoints
+- [ ] Response DTOs optimized (no unnecessary data)
+- [ ] Compression enabled for large responses
+- [ ] Connection timeouts configured
+- [ ] Rate limiting implemented where appropriate
+
+**Review Checklist:**
+- ✓ Response times acceptable (<1s for UI endpoints)
+- ✓ No N+1 queries in list endpoints
+- ✓ Pagination prevents memory issues
+- ✓ Timeouts prevent hanging requests
+- ✓ Rate limiting prevents abuse
 
 ---
 
 ## 9. Code Quality & Standards
 
-### 9.1 Code Style & Conventions
-**Code Generation Criteria:**
-- [ ] Follows Java naming conventions (camelCase, PascalCase appropriately)
-- [ ] Uses consistent code formatting (indentation, spacing)
-- [ ] Implements proper class organization (fields, constructors, methods)
-- [ ] Avoids code duplication (DRY principle)
-- [ ] Uses appropriate access modifiers (private, protected, public)
+### 9.1 Code Organization & Style
+**Generation Criteria:**
+- [ ] Follows Java naming conventions (camelCase, PascalCase)
+- [ ] Classes have single responsibility
+- [ ] Methods are short and focused (<30 lines)
+- [ ] Consistent code formatting (use Checkstyle/Spotless)
+- [ ] No duplicate code (DRY principle)
 
-**Code Review Checklist:**
-- Verify adherence to team code standards
-- Check for proper class/method sizing (Single Responsibility Principle)
-- Ensure no dead code or unused imports
-- Validate proper use of access modifiers
+**Review Checklist:**
+- ✓ Package structure logical and organized
+- ✓ Class names reflect responsibility
+- ✓ Method names clearly describe function
+- ✓ Consistent indentation and formatting
+- ✓ No "god classes" with too many responsibilities
 
 ### 9.2 Documentation
-**Code Generation Criteria:**
-- [ ] Implements JavaDoc for public APIs
-- [ ] Creates meaningful comments for complex logic
-- [ ] Maintains README with setup instructions
-- [ ] Documents API endpoints (Swagger/OpenAPI)
-- [ ] Provides configuration documentation
+**Generation Criteria:**
+- [ ] Public API methods documented with JavaDoc
+- [ ] Complex business logic has inline comments
+- [ ] README includes setup and running instructions
+- [ ] API endpoints documented (Swagger/OpenAPI)
+- [ ] Configuration options documented
 
-**Code Review Checklist:**
-- Verify JavaDoc completeness for public classes/methods
-- Check for accurate documentation (not outdated)
-- Ensure API documentation is up-to-date
-- Validate example code is working
+**Review Checklist:**
+- ✓ JavaDoc includes @param, @return, @throws
+- ✓ README up-to-date and complete
+- ✓ API docs auto-generated from code
+- ✓ Example requests/responses provided
+- ✓ Deployment instructions clear
 
 ---
 
-## 10. Build & Deployment
+## 10. Build & Dependency Management
 
-### 10.1 Build Configuration
-**Code Generation Criteria:**
-- [ ] Creates proper `pom.xml` with all required dependencies
-- [ ] Implements Maven/Gradle plugin configuration
-- [ ] Configures application versioning
-- [ ] Sets up build profiles for different environments
+### 10.1 Maven/Gradle Configuration
+**Generation Criteria:**
+- [ ] Clean, organized `pom.xml` or `build.gradle`
+- [ ] Dependency versions managed centrally
+- [ ] Only necessary dependencies included
+- [ ] Build plugins configured (compiler, surefire, etc.)
+- [ ] Build profiles for different environments
 
-**Code Review Checklist:**
-- Verify dependency versions are compatible
-- Check for unnecessary dependencies
-- Ensure build reproducibility
-- Validate security vulnerability scanning in build
+**Review Checklist:**
+- ✓ No version conflicts or diamond dependencies
+- ✓ Transitive dependencies understood
+- ✓ Security vulnerabilities scanned
+- ✓ Build reproducible across machines
+- ✓ No unused dependencies (bloat)
 
 ### 10.2 Deployment Readiness
-**Code Generation Criteria:**
-- [ ] Implements health checks and readiness probes
-- [ ] Configures graceful shutdown
-- [ ] Implements proper logging and monitoring setup
-- [ ] Creates deployment documentation
+**Generation Criteria:**
+- [ ] Application starts without errors
+- [ ] Graceful shutdown configured
+- [ ] Health checks pass before accepting traffic
+- [ ] Logging configured appropriately
+- [ ] External service connectivity validated on startup
 
-**Code Review Checklist:**
-- Verify application can start/stop cleanly
-- Check for proper environment configuration
-- Ensure metrics are exposed for monitoring
-- Validate proper error handling during startup
+**Review Checklist:**
+- ✓ All required environment variables checked
+- ✓ Database migrations run automatically
+- ✓ Cache warmed if necessary
+- ✓ Error messages don't leak system info
+- ✓ Rollback strategy documented
 
 ---
 
-## 11. Advanced Spring Boot Topics
+## 11. Version Control & Collaboration
 
-### 11.1 Reactive Programming (Spring WebFlux)
-**Code Generation Criteria:**
-- [ ] Creates reactive controllers with Mono/Flux
-- [ ] Implements non-blocking database access (R2DBC)
-- [ ] Handles backpressure appropriately
-- [ ] Implements proper error handling in reactive chains
+### 11.1 Git Practices
+**Generation Criteria:**
+- [ ] Clear, descriptive commit messages
+- [ ] Commits are atomic and logical
+- [ ] `.gitignore` excludes sensitive files and artifacts
+- [ ] Feature branches for new work
+- [ ] Pull requests for code review
 
-**Code Review Checklist:**
-- Verify reactive types are used correctly
-- Check for blocking operations in reactive code
-- Ensure proper subscription management
-- Validate error handling in reactive streams
+**Review Checklist:**
+- ✓ Commit history is readable
+- ✓ No sensitive data committed
+- ✓ Branch naming follows convention
+- ✓ PR description explains changes
+- ✓ No merge commits cluttering history
 
-### 11.2 Event-Driven Architecture
-**Code Generation Criteria:**
-- [ ] Implements Spring Events for internal events
-- [ ] Uses message brokers (Kafka, RabbitMQ) appropriately
-- [ ] Implements proper event serialization
-- [ ] Handles event ordering and idempotency
+### 11.2 Code Review Standards
+**Generation Criteria:**
+- [ ] All changes reviewed before merge
+- [ ] Tests added for new features
+- [ ] Documentation updated with changes
+- [ ] No technical debt introduced
+- [ ] Follows team coding standards
 
-**Code Review Checklist:**
-- Verify event-driven principles are followed
-- Check for proper error handling in message processing
-- Ensure event schema versioning strategy
-- Validate idempotency for critical operations
+**Review Checklist:**
+- ✓ Reviewer understands the change
+- ✓ Tests verify the fix/feature
+- ✓ No breaking changes without migration plan
+- ✓ Performance impact considered
+- ✓ Security implications reviewed
 
 ---
 
 ## Scoring Rubric
 
-### Code Generation Quality
-- **Excellent (90-100)**: Generates production-ready code with all best practices applied
-- **Good (75-89)**: Generates functional code with minor issues
-- **Acceptable (60-74)**: Generates working code with some best practices missing
-- **Poor (<60)**: Generates code with significant issues or missing critical components
+### Production Code Quality (0-100)
+| Score | Rating | Description |
+|-------|--------|-------------|
+| 90-100 | ⭐⭐⭐⭐⭐ Excellent | Production-ready, follows all standards, best practices applied |
+| 80-89 | ⭐⭐⭐⭐ Good | Mostly production-ready, minor issues, most standards followed |
+| 70-79 | ⭐⭐⭐ Acceptable | Functional but needs improvements, several standards missing |
+| 60-69 | ⭐⭐ Poor | Significant issues, many standards violated |
+| <60 | ⭐ Critical | Not production-ready, major issues present |
 
-### Code Review Capability
-- **Excellent (90-100)**: Identifies all critical issues, provides actionable feedback with solutions
-- **Good (75-89)**: Identifies most critical issues with good feedback
-- **Acceptable (60-74)**: Identifies some issues with partial feedback
-- **Poor (<60)**: Misses critical issues or provides unhelpful feedback
-
----
-
-## Evaluation Process
-
-1. **Code Generation Test**: Provide requirements and evaluate generated code against criteria
-2. **Code Review Test**: Provide Spring Boot code snippets and evaluate review quality
-3. **Scenario Analysis**: Present realistic scenarios and evaluate decision-making
-4. **Documentation Assessment**: Evaluate clarity and completeness of generated documentation
+### Code Review Quality (0-100)
+| Score | Rating | Description |
+|-------|--------|-------------|
+| 90-100 | ⭐⭐⭐⭐⭐ Excellent | Catches all critical issues, provides actionable feedback with solutions |
+| 80-89 | ⭐⭐⭐⭐ Good | Catches most critical issues, helpful feedback |
+| 70-79 | ⭐⭐⭐ Acceptable | Catches some issues, feedback could be more complete |
+| 60-69 | ⭐⭐ Poor | Misses significant issues, limited feedback |
+| <60 | ⭐ Critical | Ineffective review, misses major problems |
 
 ---
 
-## Integration with Copilot
+## Critical Issues (Must-Fix)
 
-This skill set file serves as an automated evaluation framework. When included in your repository:
+The following are **non-negotiable** and must be addressed before code can be merged:
 
-- Copilot will reference these criteria when generating Java Spring Boot code
-- Code review suggestions will be evaluated against these standards
-- The framework helps maintain consistency in code quality expectations
-- Enables benchmarking of generated code against industry best practices
-
-**File Location**: `SKILLSET.md` in repository root
-**Format**: Markdown with structured criteria and checklists
-**Usage**: Reference during code generation and review tasks
-
----
-
-## How to Use This Skillset
-
-### For Code Generation
-Ask Copilot:
-```
-Generate a Spring Boot REST API endpoint that follows the criteria in SKILLSET.md
-Specifically check sections 2.1 (Controller Implementation) and 2.2 (Exception Handling)
-```
-
-### For Code Review
-Ask Copilot:
-```
-Review this Spring Boot code against the SKILLSET.md criteria
-Focus on sections: 1.1 (Dependency Injection), 4.1 (Service Implementation), 5 (Testing)
-```
-
-### Manual Review Against Specific Sections
-```
-Check if this code follows section 3.1 (JPA/Hibernate Entities) from SKILLSET.md
-```
+- ❌ Hardcoded credentials or secrets
+- ❌ SQL injection vulnerabilities
+- ❌ Missing authentication on sensitive endpoints
+- ❌ Unhandled exceptions reaching clients
+- ❌ No tests for critical paths
+- ❌ PII or sensitive data exposed in logs/responses
+- ❌ Deprecated or vulnerable dependencies
 
 ---
 
-**Last Updated**: 2026
-**Maintenance**: Update this file as team standards evolve
+## Quality Metrics
+
+Track these metrics to maintain code health:
+
+| Metric | Target | Tool |
+|--------|--------|------|
+| Code Coverage | >70% | JaCoCo |
+| Bug Density | <1 per 1000 LOC | SonarQube |
+| Test Pass Rate | 100% | CI/CD Pipeline |
+| Security Vulnerabilities | 0 Critical, 0 High | OWASP, Snyk |
+| Technical Debt Ratio | <5% | SonarQube |
+| Cyclomatic Complexity | <10 per method | SonarQube |
+| Code Duplication | <3% | SonarQube |
+| Response Time (p99) | <1s | APM |
+
+---
+
+## Quick Reference Checklists
+
+### Before Code Review
+- [ ] Code compiles without warnings
+- [ ] All tests pass locally
+- [ ] No hardcoded values
+- [ ] No debug logging left in code
+- [ ] JavaDoc added for public APIs
+- [ ] Commit message is descriptive
+
+### Before Merging to Main
+- [ ] Code review approved
+- [ ] All CI/CD checks pass
+- [ ] Test coverage maintained
+- [ ] No security issues flagged
+- [ ] Performance impact assessed
+- [ ] Release notes updated if needed
+
+### Before Production Deployment
+- [ ] Staging environment tests pass
+- [ ] Database migrations tested
+- [ ] Rollback plan documented
+- [ ] Monitoring and alerts configured
+- [ ] Load testing completed (if needed)
+- [ ] Security scan passed
+
+---
+
+## Learning Resources
+
+- **Spring Boot Official Docs**: https://spring.io/projects/spring-boot
+- **Spring Framework Best Practices**: https://spring.io/guides
+- **Java Concurrency**: Effective Java by Joshua Bloch
+- **System Design**: Designing Data-Intensive Applications
+- **Security**: OWASP Top 10, Spring Security Guide
+
+---
+
+**Version**: 1.0 | **Last Updated**: 2026 | **Status**: Ready for Production Use
+
