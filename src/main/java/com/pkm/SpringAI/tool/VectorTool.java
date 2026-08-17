@@ -1,5 +1,6 @@
 package com.pkm.SpringAI.tool;
 
+import com.pkm.SpringAI.tool.base.AgenticTool;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.document.Document;
