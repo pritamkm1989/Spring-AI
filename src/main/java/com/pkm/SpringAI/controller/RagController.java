@@ -1,6 +1,7 @@
 package com.pkm.SpringAI.controller;
 
 import com.pkm.SpringAI.payload.RagResponse;
+import com.pkm.SpringAI.service.AgenticRagService;
 import com.pkm.SpringAI.service.RagQueryService;
 import com.pkm.SpringAI.service.impl.DocumentIngestionService;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ public class RagController {
 
     private final DocumentIngestionService ingestionService;
     private final RagQueryService queryService;
+    private final AgenticRagService agenticRagService;
 
     @PostMapping("/ingest")
     public ResponseEntity<String> ingest(@RequestParam("file") MultipartFile file)
@@ -42,8 +44,13 @@ public class RagController {
     }
 
     @GetMapping("/check")
-    public void check(@RequestParam String question) {
-        ingestionService.check(question);
+    public String check(@RequestParam String question) {
+       return ingestionService.check(question);
 
+    }
+
+    @GetMapping("/agentic/query")
+    public String agenticCheck(@RequestParam String question) {
+        return agenticRagService.askAgent(question);
     }
 }

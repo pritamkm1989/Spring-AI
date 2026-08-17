@@ -16,11 +16,21 @@ spring:
     username: postgres
     password: postgres
 
+  # Timeouts for the auto-configured RestClient/WebClient (used by Ollama API).
+  # Local models with tool calling + big context are slow, so keep read-timeout generous.
+  http:
+    client:
+      connect-timeout: 30s
+      read-timeout: 600s
+
   ai:
     ollama:
       base-url: http://localhost:11434
       embedding:
         model: nomic-embed-text
+    retry:
+      max-attempts: 3
+      on-client-errors: false
     vectorstore:
       pgvector:
         initialize-schema: true
@@ -28,7 +38,13 @@ spring:
         dimensions: 768
         distance-type: COSINE_DISTANCE
 
-
+app:
+  tools:
+    file-output-dir: ./agent-output
+    web-search:
+      url:
+      api-key:
+      max-calls-per-question: 2
 
 logging:
   level:

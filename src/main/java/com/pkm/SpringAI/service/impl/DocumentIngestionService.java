@@ -27,24 +27,49 @@ public class DocumentIngestionService {
     public void ingest(MultipartFile file) throws IOException {
         // 1. Load document (Tika handles PDF, DOCX, HTML, etc.)
         Resource resource = new InputStreamResource(file.getInputStream());
+        ingest(file.getOriginalFilename(), resource);
+    }
+
+    public void ingest(String fileName, Resource resource) {
         TikaDocumentReader reader = new TikaDocumentReader(resource);
         List<Document> rawDocs = reader.get();
 
         // 2. Split into overlapping chunks
         List<Document> chunks = textSplitter.apply(rawDocs);
         AtomicInteger chunkCounter = new AtomicInteger(1);
+        String category = deriveCategory(fileName);
         // 3. Add source metadata
         chunks.forEach(doc -> {
-            doc.getMetadata().put("source", file.getOriginalFilename());
+            doc.getMetadata().put("source", fileName);
             doc.getMetadata().put("chunkId", chunkCounter.getAndIncrement());
+            doc.getMetadata().put("category", category);
             doc.getMetadata().put("ingestedAt", LocalDateTime.now().toString());
         });
 
         // 4. Embed + store (Spring AI handles the embedding call)
         vectorStore.add(chunks);
+        log.info("Ingested {} chunks from {} with category '{}'", chunks.size(), fileName, category);
     }
 
-    public void check(String question)  {
+    /**
+     * Derive a document category from the file name so that
+     * {@code searchKnowledgeBaseByCategory} can filter on it.
+     * E.g. 'hr_policy_v3.pdf' → 'hr_policy', otherwise 'general'.
+     */
+    private String deriveCategory(String fileName) {
+        if (fileName == null || fileName.isBlank()) {
+            return "general";
+        }
+        String base = fileName.toLowerCase();
+        int dot = base.lastIndexOf('.');
+        if (dot > 0) {
+            base = base.substring(0, dot);
+        }
+        String[] parts = base.split("[_\\-\\s]+");
+        return parts.length > 1 && !parts[0].isBlank() ? parts[0] : "general";
+    }
+
+    public String check(String question)  {
         List<Document> docs = vectorStore.similaritySearch(
                 SearchRequest.builder()
                         .query(question)
@@ -61,6 +86,7 @@ public class DocumentIngestionService {
        log.info(String.valueOf(docs.stream()
                 .map(d -> d.getText().substring(0, Math.min(200, d.getText().length())))
                 .toList()));
+        return docs.get(0).getText();
 
     }
 }

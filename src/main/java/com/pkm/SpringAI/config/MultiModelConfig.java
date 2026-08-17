@@ -34,8 +34,24 @@ public class MultiModelConfig {
                         .temperature(0d)
                         .topP(0.9)
                         .topK(40)
-                        .numPredict(200)
-                        .numCtx(4096)
+                        .numPredict(1024)
+                        .numCtx(8192)
+                        .repeatPenalty(1.1)
+                        .build())
+                .build();
+    }
+
+    @Bean
+    public OllamaChatModel qwen2ChatModel(OllamaApi ollamaApi) {
+        return OllamaChatModel.builder()
+                .ollamaApi(ollamaApi)
+                .defaultOptions(OllamaChatOptions.builder()
+                        .model("qwen2.5:7b")     // ← different model here
+                        .temperature(0d)
+                        .topP(0.9)
+                        .topK(40)
+                        .numPredict(1024)
+                        .numCtx(8192)
                         .repeatPenalty(1.1)
                         .build())
                 .build();
@@ -52,11 +68,16 @@ public class MultiModelConfig {
                         .temperature(0d)
                         .topP(0.9)
                         .topK(40)
-                        .numPredict(200)
-                        .numCtx(4096)
+                        .numPredict(100)
+                        .numCtx(2048)
                         .repeatPenalty(1.1)
                         .build())
                 .build();
+    }
+
+    @Bean
+    public ChatClient qwen2ChatClient(@Qualifier("qwen2ChatModel") OllamaChatModel qwen2 ) {
+        return ChatClient.builder(qwen2).build();
     }
 
     @Bean
