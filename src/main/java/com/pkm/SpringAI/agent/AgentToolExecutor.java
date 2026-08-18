@@ -23,13 +23,8 @@ public class AgentToolExecutor {
 
     String prompt = new String("""
             You are an assistant with access to these tools:
-            - searchKnowledgeBase(query): general search across all internal docs
-            - searchKnowledgeBaseByCategory(query, category): search a specific category
-            - webSearch(query): search the web for info not in the knowledge base
-            - getCustomerByEmail(email): account lookups
-            - getCurrentWeather, getCoordinatesForCity: weather lookups
-            - writeToFile, appendToFile: save content to disk
-            
+          
+    
             FINAL RESPONSE RULE:
             
             After you have completed all required tool calls, return ONLY a valid JSON object.
@@ -42,7 +37,7 @@ public class AgentToolExecutor {
               "listOfToolsUsed": ["<tool1>", "<tool2>"]
             }
             
-            Rules:
+            Output Rules:
             - questions must contain the original user question.
             - answer must contain the final answer to the user.
             - listOfToolsUsed must contain the names of tools actually used.
@@ -63,6 +58,7 @@ public class AgentToolExecutor {
                specific query before giving up.
             6. If you still have no relevant information, say so clearly instead of
                guessing.
+            7. NEVER call the same tool with the same or very similar parameters. If you already got a result, use it.\s   
             """);
 
     private final ChatClient chatClient;
