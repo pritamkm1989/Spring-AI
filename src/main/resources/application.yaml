@@ -70,4 +70,10 @@ logging:
 
 open-router:
    base-url: https://openrouter.ai/api
-   key: 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
+   key: ENC(fWCglxzftx71UqRS0GT8z/CV1GP+U87nGdE2iBXcSXquh5NiioAIfp7NQ1BCuBLK8Y6OLRbCzj+7yv90SX2Jr9JSWC3iXFnwmPnDByRsUe2eXQO7wgDthw==)
+
+jasypt:
+  encryptor:
+    #password: ${jasypt.encryptor.password}
+    algorithm: PBEWithMD5AndDES
+    iv-generator: org.jasypt.iv.RandomIvGenerator

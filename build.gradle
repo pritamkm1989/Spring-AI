@@ -42,6 +42,9 @@ dependencies {
 	// Source: https://mvnrepository.com/artifact/tools.jackson.core/jackson-core
 	implementation("tools.jackson.core:jackson-core:3.1.0")
 
+	// Source: https://mvnrepository.com/artifact/com.github.ulisesbocchio/jasypt-spring-boot-starter
+	implementation("com.github.ulisesbocchio:jasypt-spring-boot-starter:3.0.5")
+
 	// Source: https://mvnrepository.com/artifact/org.springframework.ai/spring-ai-vector-store
 	implementation "org.springframework.ai:spring-ai-advisors-vector-store"
 }
