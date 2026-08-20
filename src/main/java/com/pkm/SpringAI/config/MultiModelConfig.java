@@ -4,6 +4,9 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.ai.ollama.api.OllamaApi;
 import org.springframework.ai.ollama.api.OllamaChatOptions;
+import org.springframework.ai.openai.OpenAiChatModel;
+import org.springframework.ai.openai.OpenAiChatOptions;
+import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -15,6 +18,12 @@ public class MultiModelConfig {
 
     @Value("${spring.ai.ollama.base-url}")
     private String olamaApiUrl;
+
+    @Value("${open-router.key}")
+    private String openRouterKey;
+
+    @Value("${open-router.base-url}")
+    private String openRouterBaseUrl;
 
 
     @Bean
@@ -50,9 +59,21 @@ public class MultiModelConfig {
                         .temperature(0d)
                         .topP(0.9)
                         .topK(40)
-                        .numPredict(1024)
+                        .numPredict(256)
                         .numCtx(8192)
                         .repeatPenalty(1.1)
+                        .build())
+                .build();
+    }
+
+    @Bean
+    public OpenAiChatModel gemma4Model() {
+        return OpenAiChatModel.builder()
+                .openAiApi(OpenAiApi.builder().apiKey(openRouterKey).baseUrl(openRouterBaseUrl).build())
+                .defaultOptions(OpenAiChatOptions.builder()
+                        .model("gemma-4-26b-a4b-it")     // ← different model here
+                        .temperature(0d)
+                        .topP(0.9)
                         .build())
                 .build();
     }
@@ -79,6 +100,7 @@ public class MultiModelConfig {
     public ChatClient qwen2ChatClient(@Qualifier("qwen2ChatModel") OllamaChatModel qwen2 ) {
         return ChatClient.builder(qwen2).build();
     }
+
 
     @Bean
     public ChatClient phi3ChatChatClient(@Qualifier("phi3ChatModel") OllamaChatModel phi3ChatModel ) {

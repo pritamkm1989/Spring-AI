@@ -24,6 +24,8 @@ spring:
       read-timeout: 600s
 
   ai:
+    openai:
+      api-key: temp-key
     ollama:
       base-url: http://localhost:11434
       embedding:
@@ -65,3 +67,7 @@ logging:
     org.springframework.jdbc.core.JdbcTemplate: DEBUG
     org.springframework.jdbc.core.StatementCreatorUtils: TRACE
     org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor: DEBUG
+
+open-router:
+   base-url: https://openrouter.ai/api
+   key: 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

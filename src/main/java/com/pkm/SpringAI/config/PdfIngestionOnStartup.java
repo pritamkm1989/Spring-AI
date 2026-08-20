@@ -25,7 +25,7 @@ public class PdfIngestionOnStartup implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        String filename = "regions-zones.pdf";
+        String filename = "aws-overview.pdf";
         try {
             ClassPathResource resource = new ClassPathResource(filename);
             if (!resource.exists()) {

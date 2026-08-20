@@ -64,7 +64,7 @@ public class AgentToolExecutor {
     private final ChatClient chatClient;
     private final ToolRateLimiter rateLimiter;
 
-    public AgentToolExecutor(@Qualifier("qwen2ChatModel") ChatModel chatModel,
+    public AgentToolExecutor(@Qualifier("gemma4Model") ChatModel chatModel,
                              List<AgenticTool> tools,
                              ToolRateLimiter rateLimiter) {
         this.rateLimiter = rateLimiter;
