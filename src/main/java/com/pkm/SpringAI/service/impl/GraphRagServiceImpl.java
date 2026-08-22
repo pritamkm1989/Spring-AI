@@ -1,6 +1,6 @@
 package com.pkm.SpringAI.service.impl;
 
-import com.pkm.SpringAI.agent.AgentGraphToolExecutor;
+import com.pkm.SpringAI.graph.AgentGraphToolExecutor;
 import com.pkm.SpringAI.service.GraphRagService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

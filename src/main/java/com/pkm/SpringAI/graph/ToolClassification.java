@@ -1,4 +1,4 @@
-package com.pkm.SpringAI.agent;
+package com.pkm.SpringAI.graph;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;

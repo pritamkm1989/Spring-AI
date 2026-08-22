@@ -1,4 +1,4 @@
-package com.pkm.SpringAI.agent;
+package com.pkm.SpringAI.graph;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
