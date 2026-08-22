@@ -5,6 +5,7 @@ import com.pkm.SpringAI.service.AgenticRagService;
 import com.pkm.SpringAI.service.GraphRagService;
 import com.pkm.SpringAI.service.RagQueryService;
 import com.pkm.SpringAI.service.impl.DocumentIngestionService;
+import com.pkm.SpringAI.service.ParallelAgentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -24,6 +26,7 @@ public class RagController {
     private final RagQueryService queryService;
     private final AgenticRagService agenticRagService;
     private final GraphRagService graphRagService;
+    private final ParallelAgentService parallelAgentService;
 
     @PostMapping("/ingest")
     public ResponseEntity<String> ingest(@RequestParam("file") MultipartFile file)
@@ -59,5 +62,10 @@ public class RagController {
     @GetMapping("/graph/query")
     public String graphQuery(@RequestParam String question) {
         return graphRagService.askGraphAgent(question);
+    }
+
+    @GetMapping("/parallel/query")
+    public Map<String, String> parallelQuery(@RequestParam String question) {
+        return parallelAgentService.invokeParallel(question);
     }
 }

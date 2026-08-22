@@ -47,6 +47,7 @@ dependencies {
 
 	// Source: https://mvnrepository.com/artifact/org.springframework.ai/spring-ai-vector-store
 	implementation "org.springframework.ai:spring-ai-advisors-vector-store"
+	implementation "org.springframework.ai:spring-ai-starter-mcp-client"
 }
 
 dependencyManagement {

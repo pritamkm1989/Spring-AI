@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
-@Component
+//@Component
 @RequiredArgsConstructor
 public class PdfIngestionOnStartup implements CommandLineRunner {
 

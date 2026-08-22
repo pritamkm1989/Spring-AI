@@ -15,6 +15,9 @@ spring:
     url: jdbc:postgresql://localhost:5422/springai
     username: postgres
     password: postgres
+  jpa:
+    hibernate:
+      ddl-auto: validate
 
   # Timeouts for the auto-configured RestClient/WebClient (used by Ollama API).
   # Local models with tool calling + big context are slow, so keep read-timeout generous.
@@ -68,12 +71,25 @@ logging:
     org.springframework.jdbc.core.StatementCreatorUtils: TRACE
     org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor: DEBUG
 
-open-router:
-   base-url: https://openrouter.ai/api
-   key: ENC(fWCglxzftx71UqRS0GT8z/CV1GP+U87nGdE2iBXcSXquh5NiioAIfp7NQ1BCuBLK8Y6OLRbCzj+7yv90SX2Jr9JSWC3iXFnwmPnDByRsUe2eXQO7wgDthw==)
-
+    # ===== MCP CLIENT =====
+    io.modelcontextprotocol: DEBUG
+    io.modelcontextprotocol.client: INFO
+    io.modelcontextprotocol.client.transport: WARN
 jasypt:
   encryptor:
     #password: ${jasypt.encryptor.password}
     algorithm: PBEWithMD5AndDES
-    iv-generator: org.jasypt.iv.RandomIvGenerator
+    iv-generator-classname: org.jasypt.iv.NoIvGenerator
+    key-obtention-iterations: 1000
+open-router:
+   base-url: https://openrouter.ai/api
+   key: ENC(fWCglxzftx71UqRS0GT8z/CV1GP+U87nGdE2iBXcSXquh5NiioAIfp7NQ1BCuBLK8Y6OLRbCzj+7yv90SX2Jr9JSWC3iXFnwmPnDByRsUe2eXQO7wgDthw==)
+spring.ai.mcp.client:
+  enabled: false
+
+parallel:
+  mcp:
+    api:
+      key: pT9U_M6Astfn5RAEfHZg9Ck8snURK1EURFPEdVnO
+      base-uri: https://search.parallel.ai
+      endpoint: /mcp
