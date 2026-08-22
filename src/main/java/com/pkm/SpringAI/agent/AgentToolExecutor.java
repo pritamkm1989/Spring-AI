@@ -1,5 +1,6 @@
 package com.pkm.SpringAI.agent;
 
+import com.pkm.SpringAI.mcp.McpToolCallback;
 import com.pkm.SpringAI.tool.base.AgenticTool;
 import com.pkm.SpringAI.tool.base.RateLimitedToolCallback;
 import com.pkm.SpringAI.tool.base.ToolRateLimiter;
@@ -9,10 +10,11 @@ import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.support.ToolCallbacks;
 import org.springframework.ai.tool.ToolCallback;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,51 +24,28 @@ import java.util.Map;
 public class AgentToolExecutor {
 
     String prompt = new String("""
-            You are an assistant with access to these tools:
-          
-    
+            You are a helpful assistant with access to tools.
+            
             FINAL RESPONSE RULE:
-            
-            After you have completed all required tool calls, return ONLY a valid JSON object.
-            
-            The JSON must have exactly these fields:
-            
+            After using any tools, return ONLY a valid JSON object:
             {
               "questions": "<original user question>",
-              "answer": "<final answer>",
-              "listOfToolsUsed": ["<tool1>", "<tool2>"]
+              "answer": "<concise answer based on tool results>",
+              "listOfToolsUsed": ["<tool names>"]
             }
             
-            Output Rules:
-            - questions must contain the original user question.
-            - answer must contain the final answer to the user.
-            - listOfToolsUsed must contain the names of tools actually used.
-            - Do not include markdown.
-            - Do not include ```json.
-            - Do not include any text outside the JSON.
-
-            RULES:
-            1. For questions about internal docs, policies, products, HR or company
-               information, FIRST call searchKnowledgeBase (or searchKnowledgeBaseByCategory)
-               to retrieve relevant context, then answer based on it. Never answer from memory.
-            2. Rewrite vague or unclear questions into clear, specific search queries
-               before calling a search tool.
-            3. Only use webSearch when the knowledge base returns no relevant results.
-            4. Use weather, account or file tools only when the user explicitly asks
-               about weather, customer data, or saving content to a file.
-            5. If a tool call returns no results, try once more with a different, more
-               specific query before giving up.
-            6. If you still have no relevant information, say so clearly instead of
-               guessing.
-            7. NEVER call the same tool with the same or very similar parameters. If you already got a result, use it.\s   
+            Rules:
+            - Do not include markdown or ```json.
+            - Answer based only on tool results, not memory.
             """);
 
     private final ChatClient chatClient;
     private final ToolRateLimiter rateLimiter;
 
-    public AgentToolExecutor(@Qualifier("gemma4Model") ChatModel chatModel,
+    public AgentToolExecutor(@Qualifier("qwen2ChatModel") ChatModel chatModel,
                              List<AgenticTool> tools,
-                             ToolRateLimiter rateLimiter) {
+                             ToolRateLimiter rateLimiter,
+                             ObjectProvider<List<McpToolCallback>> mcpToolCallbacksProvider) {
         this.rateLimiter = rateLimiter;
 
         Map<String, AgenticTool> toolMap = new HashMap<>();
@@ -77,16 +56,36 @@ public class AgentToolExecutor {
             }
         }
 
-        ToolCallback[] wrapped = tools.stream()
-                .flatMap(tool -> Arrays.stream(ToolCallbacks.from(tool)))
-                .map(cb -> (ToolCallback) new RateLimitedToolCallback(
-                        cb, rateLimiter, toolMap.get(cb.getToolDefinition().name())))
-                .toArray(ToolCallback[]::new);
+        List<ToolCallback> allCallbacks = new ArrayList<>();
 
-        log.info("[AgentToolExecutor] registered {} rate-limited tool callbacks", wrapped.length);
+        // Wrap @Tool annotated methods with rate limiting
+        for (AgenticTool tool : tools) {
+            ToolCallback[] cbs = ToolCallbacks.from(tool);
+            for (ToolCallback cb : cbs) {
+                allCallbacks.add(new RateLimitedToolCallback(cb, rateLimiter, tool));
+            }
+        }
+
+        // Add MCP tool callbacks with rate limiting
+        List<McpToolCallback> mcpCallbacks = mcpToolCallbacksProvider.getIfAvailable();
+        if (mcpCallbacks != null && !mcpCallbacks.isEmpty()) {
+            log.info("[AgentToolExecutor] adding {} MCP tool callbacks", mcpCallbacks.size());
+            AgenticTool mcpToolStub = new AgenticTool() {
+                @Override
+                public int getMaxCallsPerQuestion() {
+                    return 5;
+                }
+            };
+            for (McpToolCallback mcpCb : mcpCallbacks) {
+                allCallbacks.add(new RateLimitedToolCallback(mcpCb, rateLimiter, mcpToolStub));
+                log.info("[AgentToolExecutor]   + MCP tool: {}", mcpCb.getToolDefinition().name());
+            }
+        }
+
+        log.info("[AgentToolExecutor] total registered tool callbacks: {}", allCallbacks.size());
 
         this.chatClient = ChatClient.builder(chatModel)
-                .defaultToolCallbacks(wrapped)
+                .defaultToolCallbacks(allCallbacks.toArray(ToolCallback[]::new))
                 .defaultSystem(prompt)
                 .build();
     }

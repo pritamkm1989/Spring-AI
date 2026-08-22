@@ -13,8 +13,8 @@ import org.springframework.web.client.RestClient;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
-@Component
-public class WebSearchTool implements AgenticTool {
+//@Component
+public class WebSearchTool{ //implements AgenticTool {
 
     private static final String DUCKDUCKGO_URL = "https://api.duckduckgo.com/";
 

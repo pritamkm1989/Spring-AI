@@ -87,9 +87,22 @@ open-router:
 spring.ai.mcp.client:
   enabled: false
 
-parallel:
-  mcp:
-    api:
-      key: pT9U_M6Astfn5RAEfHZg9Ck8snURK1EURFPEdVnO
-      base-uri: https://search.parallel.ai
-      endpoint: /mcp
+mcp:
+  config:
+    servers:
+      - name: parallel-search
+        base-uri: https://search.parallel.ai
+        endpoint: /mcp
+        api-key: pT9U_M6Astfn5RAEfHZg9Ck8snURK1EURFPEdVnO
+        prefix: parallel
+        client-version: "1.0.0"
+        transport: streamable
+      - name: spring-ai-mcp-server
+        base-uri: http://localhost:8090
+        sse-endpoint: /sse
+        username: admin
+        password: admin123
+        prefix: local
+        client-version: "1.0.0"
+        transport: sse
+
