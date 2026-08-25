@@ -3,6 +3,7 @@ package com.pkm.SpringAI.agent;
 import com.pkm.SpringAI.mcp.McpToolCallback;
 import com.pkm.SpringAI.tool.base.AgenticTool;
 import com.pkm.SpringAI.tool.base.RateLimitedToolCallback;
+import com.pkm.SpringAI.tool.base.ToolCallTracker;
 import com.pkm.SpringAI.tool.base.ToolRateLimiter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -41,12 +42,15 @@ public class AgentToolExecutor {
 
     private final ChatClient chatClient;
     private final ToolRateLimiter rateLimiter;
+    private final ToolCallTracker toolCallTracker;
 
     public AgentToolExecutor(@Qualifier("qwen2ChatModel") ChatModel chatModel,
                              List<AgenticTool> tools,
                              ToolRateLimiter rateLimiter,
-                             ObjectProvider<List<McpToolCallback>> mcpToolCallbacksProvider) {
+                             ObjectProvider<List<McpToolCallback>> mcpToolCallbacksProvider,
+                             ToolCallTracker toolCallTracker) {
         this.rateLimiter = rateLimiter;
+        this.toolCallTracker = toolCallTracker;
 
         Map<String, AgenticTool> toolMap = new HashMap<>();
         for (AgenticTool tool : tools) {
@@ -62,7 +66,7 @@ public class AgentToolExecutor {
         for (AgenticTool tool : tools) {
             ToolCallback[] cbs = ToolCallbacks.from(tool);
             for (ToolCallback cb : cbs) {
-                allCallbacks.add(new RateLimitedToolCallback(cb, rateLimiter, tool));
+                allCallbacks.add(new RateLimitedToolCallback(cb, rateLimiter, tool,toolCallTracker));
             }
         }
 
@@ -77,7 +81,7 @@ public class AgentToolExecutor {
                 }
             };
             for (McpToolCallback mcpCb : mcpCallbacks) {
-                allCallbacks.add(new RateLimitedToolCallback(mcpCb, rateLimiter, mcpToolStub));
+                allCallbacks.add(new RateLimitedToolCallback(mcpCb, rateLimiter, mcpToolStub,toolCallTracker));
                 log.info("[AgentToolExecutor]   + MCP tool: {}", mcpCb.getToolDefinition().name());
             }
         }
@@ -92,11 +96,17 @@ public class AgentToolExecutor {
 
     public String execute(String question) {
         rateLimiter.reset();
+        toolCallTracker.reset();
         ChatResponse response = chatClient.prompt()
                 .user(question)
                 .call()
                 .chatResponse();
         log.info("[AgentToolExecutor] usage={}", response.getMetadata().getUsage());
+
+        log.info("[AgentToolExecutor] tracked tools: {}", toolCallTracker.getCalledTools());
+
         return response.getResult().getOutput().getText();
     }
+
+
 }
