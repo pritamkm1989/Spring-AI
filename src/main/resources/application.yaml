@@ -85,24 +85,27 @@ open-router:
    base-url: https://openrouter.ai/api
    key: ENC(fWCglxzftx71UqRS0GT8z/CV1GP+U87nGdE2iBXcSXquh5NiioAIfp7NQ1BCuBLK8Y6OLRbCzj+7yv90SX2Jr9JSWC3iXFnwmPnDByRsUe2eXQO7wgDthw==)
 spring.ai.mcp.client:
-  enabled: false
+  enabled: true
+  type: SYNC
+  request-timeout: 30s
+  toolcallback:
+    enabled: true
+  streamable-http:
+    connections:
+      parallel-search:
+        url: https://search.parallel.ai
+        endpoint: /mcp
+  sse:
+    connections:
+      spring-ai-mcp-server:
+        url: http://localhost:8090
+        sse-endpoint: /sse
 
 mcp:
-  config:
-    servers:
-      - name: parallel-search
-        base-uri: https://search.parallel.ai
-        endpoint: /mcp
-        api-key: pT9U_M6Astfn5RAEfHZg9Ck8snURK1EURFPEdVnO
-        prefix: parallel
-        client-version: "1.0.0"
-        transport: streamable
-      - name: spring-ai-mcp-server
-        base-uri: http://localhost:8090
-        sse-endpoint: /sse
-        username: admin
-        password: admin123
-        prefix: local
-        client-version: "1.0.0"
-        transport: sse
+  auth:
+    parallel-search:
+      api-key: pT9U_M6Astfn5RAEfHZg9Ck8snURK1EURFPEdVnO
+    local-server:
+      username: admin
+      password: admin123
 

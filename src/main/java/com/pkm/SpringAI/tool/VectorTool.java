@@ -21,7 +21,21 @@ public class VectorTool implements AgenticTool {
 
     private final VectorStore vectorStore;
 
-    @Tool(description = "Search the internal knowledge base for relevant context on a topic")
+    @Tool(description = "\"\"\n" +
+            "Search the INTERNAL KNOWLEDGE BASE.\n" +
+            "\n" +
+            "Use this tool FIRST whenever the question is about:\n" +
+            "- AWS regions\n" +
+            "- AWS services\n" +
+            "- internal documents\n" +
+            "- company/product information\n" +
+            "- information contained in the organization's knowledge base.\n" +
+            "\n" +
+            "Do NOT use web search for information that can be answered from this\n" +
+            "knowledge base.\n" +
+            "\n" +
+            "Returns information retrieved from the internal vector database.\n" +
+            "\"\"")
     public String searchKnowledgeBase(
             @ToolParam(description = "Clear, specific search query about the internal documents") String query) {
         log.info("[Search] {}", query);

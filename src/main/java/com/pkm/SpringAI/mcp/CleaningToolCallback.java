@@ -2,65 +2,32 @@ package com.pkm.SpringAI.mcp;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.modelcontextprotocol.client.McpSyncClient;
-import io.modelcontextprotocol.spec.McpSchema;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.tool.ToolCallback;
-import org.springframework.ai.tool.definition.DefaultToolDefinition;
 import org.springframework.ai.tool.definition.ToolDefinition;
 
-import java.util.Map;
-import java.util.stream.Collectors;
-
 @Slf4j
-public class McpToolCallback implements ToolCallback {
+public class CleaningToolCallback implements ToolCallback {
 
     private static final int MAX_RESULT_CHARS = 1000;
-
-    private final McpSyncClient client;
-    private final McpSchema.Tool mcpTool;
+    private final ToolCallback delegate;
     private final String originalToolName;
-    private final ToolDefinition toolDefinition;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public McpToolCallback(McpSyncClient client, McpSchema.Tool mcpTool, String originalToolName) {
-        this.client = client;
-        this.mcpTool = mcpTool;
+    public CleaningToolCallback(ToolCallback delegate, String originalToolName) {
+        this.delegate = delegate;
         this.originalToolName = originalToolName;
-        this.toolDefinition = buildToolDefinition(mcpTool);
     }
 
     @Override
     public ToolDefinition getToolDefinition() {
-        return toolDefinition;
+        return delegate.getToolDefinition();
     }
 
     @Override
     public String call(String toolInput) {
-        try {
-            log.info("[McpTool] calling '{}' with input: {}", mcpTool.name(),
-                    toolInput.length() > 200 ? toolInput.substring(0, 200) + "..." : toolInput);
-
-            @SuppressWarnings("unchecked")
-            Map<String, Object> args = objectMapper.readValue(toolInput, Map.class);
-
-            McpSchema.CallToolRequest request = new McpSchema.CallToolRequest(originalToolName, args);
-            McpSchema.CallToolResult result = client.callTool(request);
-
-            String text = result.content().stream()
-                    .filter(c -> c instanceof McpSchema.TextContent)
-                    .map(c -> ((McpSchema.TextContent) c).text())
-                    .collect(Collectors.joining("\n"));
-
-            text = cleanResult(text, originalToolName);
-
-            log.info("[McpTool] '{}' returned {} chars after cleaning, isError={}",
-                    mcpTool.name(), text.length(), result.isError());
-            return text;
-        } catch (Exception e) {
-            log.error("[McpTool] '{}' failed: {}", mcpTool.name(), e.getMessage(), e);
-            return "McpTool '" + mcpTool.name() + "' failed: " + e.getMessage();
-        }
+        String result = delegate.call(toolInput);
+        return cleanResult(result, originalToolName);
     }
 
     private String cleanResult(String raw, String toolName) {
@@ -69,13 +36,11 @@ public class McpToolCallback implements ToolCallback {
         try {
             JsonNode root = objectMapper.readTree(raw);
 
-            // Search results: {"results": [...]}
             JsonNode results = root.path("results");
             if (results.isArray() && !results.isEmpty()) {
                 return cleanSearchResults(results);
             }
 
-            // Fallback: truncate raw
             return raw.length() > MAX_RESULT_CHARS
                     ? raw.substring(0, MAX_RESULT_CHARS) + "..."
                     : raw;
@@ -120,21 +85,5 @@ public class McpToolCallback implements ToolCallback {
 
         String cleaned = sb.toString();
         return cleaned.isEmpty() ? "No relevant results found" : cleaned;
-    }
-
-    private ToolDefinition buildToolDefinition(McpSchema.Tool tool) {
-        String inputSchemaJson;
-        try {
-            inputSchemaJson = objectMapper.writeValueAsString(tool.inputSchema());
-        } catch (Exception e) {
-            log.warn("Failed to serialize inputSchema for tool '{}', using empty object", tool.name());
-            inputSchemaJson = "{\"type\":\"object\"}";
-        }
-
-        return DefaultToolDefinition.builder()
-                .name(tool.name())
-                .description(tool.description() != null ? tool.description() : "MCP tool: " + tool.name())
-                .inputSchema(inputSchemaJson)
-                .build();
     }
 }
